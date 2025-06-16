@@ -3,6 +3,8 @@ import sys
 from dotenv import load_dotenv
 from google import genai
 from google.genai.errors import ServerError
+from google.genai import types
+
 
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
@@ -15,13 +17,17 @@ if len(script_args) < 2:
     sys.exit(1)
 
 prompt_arg = script_args[1]
-# print(script_args)
+messages = [types.Content(role="user", parts=[types.Part(text=prompt_arg)])]
 try:
-    api_response = client.models.generate_content(model="gemini-2.0-flash-001", contents=prompt_arg)
+    api_response = client.models.generate_content(model="gemini-2.0-flash-001", contents=messages)
     api_response_text = api_response.text
 
-    print(api_response_text)
-    print("Prompt tokens:", api_response.usage_metadata.prompt_token_count)
-    print("Response tokens:", api_response.usage_metadata.candidates_token_count)
+    if "--verbose" in script_args:
+        print(f"User prompt: {prompt_arg}")
+        print(f"Prompt tokens: {api_response.usage_metadata.prompt_token_count}")
+        print(f"Response tokens: {api_response.usage_metadata.candidates_token_count}")
+        print(api_response_text)
+    else:
+        print(api_response_text)
 except ServerError:
     print("The Gemini API is temporarily unavailable. Please try again later.")
